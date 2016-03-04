@@ -85,4 +85,7 @@ func (i *FileInput) emit() {
 	}
 
 	log.Println("FileInput: end of file")
+	// wait for a while then terminate
+	time.Sleep(20 * time.Second)
+	os.Exit(0)
 }
