@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/buger/gor.png?branch=master)](https://travis-ci.org/buger/gor)
+## Gor_Redis
+
+![Diagram](https://cloud.githubusercontent.com/assets/2379575/14806505/34cd550a-0ba6-11e6-95a0-57a8ace33a25.png)
 
 ## About
 
