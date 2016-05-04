@@ -1,8 +1,8 @@
 /*
-$ export GOPATH=/Users/liubryan/workApp/gor/
+$ export GOPATH=/Users/liubryan/workApp/workspace/gor-redis/
 $ export GOOS=linux
 $ export GOARCH=amd64
-$ cd /Users/liubryan/workApp/gor/src/github.com/buger/gor
+$ cd /Users/liubryan/workApp/workspace/gor-redis/src/github.com/bryan0817/gor
 $ go build -o ./gor-$GOOS-$GOARCH
 Run it:
 ./gor-linux-amd64 --input-file "request.1.gor" --output-redis "192.168.101.170:6379"
@@ -50,17 +50,19 @@ func (o *RedisOutput) Write(data []byte) (n int, err error) {
 		return len(data), nil
 	}
 	ssp, _time, body := process(data)
-	sEnc := base64.StdEncoding.EncodeToString(body)
-	ts, _ := strconv.ParseFloat(_time, 64)
-	// Epoch time - UnixNano() convert to milliseconds
-	ts = ts / float64(time.Millisecond)
+	if (len(ssp) > 0) {
+		sEnc := base64.StdEncoding.EncodeToString(body)
+		ts, _ := strconv.ParseFloat(_time, 64)
+		// Epoch time - UnixNano() convert to milliseconds
+		ts = ts / float64(time.Millisecond)
 
-	if(len(ssp) == 0) {
-		Debug("Return due to no ssp (Host/PoST method) found")
-		return len(data), nil
+		if (len(ssp) == 0) {
+			Debug("Return due to no ssp (Host/PoST method) found")
+			return len(data), nil
+		}
+		o.client.ZAdd("qa-" + ssp, redis.Z{ts, sEnc}) // redis sorted set
+		//o.client.SAdd(ssp, sEnc) // redis set
 	}
-	o.client.ZAdd("qa-"+ssp, redis.Z{ts, sEnc}) // redis sorted set
-	//o.client.SAdd(ssp, sEnc) // redis set
 	return len(data), nil
 }
 
@@ -116,8 +118,12 @@ func process(buf []byte) (ssp string, timeStamp string, body []byte) {
 
 	case '2': // Original response
 		//only do request
+		Debug("[OUTPUTTER] into case 2")
+		return "", "", buf
 	case '3': // Replayed response
 		//only do request
+		Debug("[OUTPUTTER] into case 3")
+		return "", "", buf
 	}
 	result := buf[reqBodyIndex:]
 	if Settings.debug {
